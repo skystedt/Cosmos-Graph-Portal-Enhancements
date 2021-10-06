@@ -1,7 +1,8 @@
 # Cosmos Graph Portal Enhancements
-Chrome extension to enhance the Cosmos query editor in the portal.
+Chrome extension to enhance the Cosmos graph query editor in the portal.
 
-- Enables line breaks
-- Submiting the query is done with shift + enter
+- Enable line breaks  
+  (enter or shift + enter will insert at line break, ctrl + enter executes the query)
+- Enable right click in the editor text field
 
 [Chrome Web Store](https://chrome.google.com/webstore/detail/kafgakbjaooedlknboeegpjeiddfofpb)
