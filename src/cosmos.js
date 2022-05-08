@@ -186,10 +186,19 @@ class GremlinFormatter {
   }
 
   format(query) {
-    const queryLength = query.replaceAll(/\n */g, "").length;
-    return this.#gremlint.formatQuery(query, {
+    // first format with maxLineLength equal to the queries length, will remove all unnecessary whitespaces (except whitespaces before the query starts and after the query ends)
+    const singleLine = this.#gremlint.formatQuery(query, {
       indentation: 0,
-      maxLineLength: Math.max(Math.min(160, queryLength - 1), 0),
+      maxLineLength: query.length,
+      shouldPlaceDotsAfterLineBreaks: true
+    });
+    // remove whitespaces before the query starts and after the query ends
+    const trimmedSingleLine = singleLine.trim();
+    // second format to try to force ine breaks as best as possible (keep lines long but have several by on seperate lines)
+    const maxLineLength = Math.min(Math.max(Math.floor(trimmedSingleLine.length / 2), 40), trimmedSingleLine.length - 1); // half the query but not below 40 except if the query is less
+    return this.#gremlint.formatQuery(trimmedSingleLine, {
+      indentation: 0,
+      maxLineLength: maxLineLength,
       shouldPlaceDotsAfterLineBreaks: true
     });
   }
