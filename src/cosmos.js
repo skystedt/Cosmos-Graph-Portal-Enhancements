@@ -73,7 +73,7 @@ class QueryEditor {
         return this.#inputCallback(event);
       }
     });
-    
+
     document.addEventListener("contextmenu", (event) => {
       const queryTextAreaSelector = ".queryContainer textarea";
       if (event.target.matches(queryTextAreaSelector)) {
@@ -82,7 +82,7 @@ class QueryEditor {
         }
       }
     }, true);
-    
+
     if (this.#textAreaAddedCallback) {
       return this.#textAreaAddedCallback(element);
     }
@@ -119,7 +119,7 @@ class QueryEditor {
       }
     }
   }
-  
+
   #observeFirstBodyMutation() {
     const bodyObserver = new MutationObserver((mutationsList, observer) => {
       for (const mutation of mutationsList) {
@@ -154,7 +154,7 @@ class QueryEditor {
 
   #tabElementAdded(tabElement) {
     const queryContainerSelector = ".graphExplorerContainer .queryContainer";
-  
+
     const queryContainer = tabElement.querySelector(queryContainerSelector);
     if (!queryContainer) {
       console.warn("Query container element not found");
@@ -208,13 +208,14 @@ class GremlinFormatter {
   const queryEditor = new QueryEditor();
   
   queryEditor.textAreaAdded((element) => {
-    
+
     // disable spellcheck
     element.spellcheck = false;
     
     // remove rezise (since we auto size after content) and set min height
     element.style.resize = "none";
     element.style.minHeight = "84px";
+    element.style.maxHeight = "50vh";
     element.parentNode.style.minHeight = "inherit"; // default has a min height smaller than the textarea
   });
   
@@ -258,6 +259,20 @@ class GremlinFormatter {
   });
   queryEditor.addStyle(".filterbtnstyle.queryButton:hover { border: solid 1px transparent; }");
   
-  // hide suggestion list
-  queryEditor.addStyle(".graphExplorerContainer .queryContainer .ms-List { display: none; }");
+  queryEditor.addStyle(`
+    /* hide suggestion list */
+    .graphExplorerContainer .queryContainer .ms-List {
+      display: none;
+    }
+    
+    /* limit close button height */
+    .graphExplorerContainer .queryContainer .filterclose {
+      height: 25px;
+    }
+    
+    /* hide graph helper/load graph */
+    .graphExplorerContainer .loadGraphHelper {
+      display: none;
+    }
+  `);
 })();
