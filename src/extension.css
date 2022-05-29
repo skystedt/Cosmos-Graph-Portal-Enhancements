@@ -1,0 +1,90 @@
+/* hide double scrollbar */
+.resourceTreeAndTabs .tabsManagerContainer {
+  overflow-y: hidden;
+}
+
+/* hide graph helper/load graph */
+.graphExplorerContainer .loadGraphHelper {
+  display: none;
+}
+
+/* hide suggestion list */
+.graphExplorerContainer .queryContainer .ms-List {
+  display: none;
+}
+
+/* limit close button height */
+.graphExplorerContainer .queryContainer .filterclose {
+  height: 25px;
+}
+
+/* fix hover on new buttons messing with sizing/layout */
+.graphExplorerContainer .filterbtnstyle.queryButton:hover {
+  border: solid 1px transparent;
+}
+
+/* remove 100% height, to enable more dynamic sizing */
+.graphExplorerContainer .tabComponentContainer {
+  height: auto;
+}
+	
+/* show whole json result */
+.graphExplorerContainer .tabComponentContent.graphJsonEditor {
+  overflow: visible;
+  padding: 24px 12px 12px; /* used when calculating result max height */
+  margin: 0;
+  border: none;
+}
+.graphExplorerContainer .tabComponentContent.graphJsonEditor .jsonEditor {
+  border-width: 2px;
+}
+
+/* monaco-editor context menu, hide first and last actions */
+.graphExplorerContainer .monaco-editor .context-view .actions-container li:nth-child(1),
+.graphExplorerContainer .monaco-editor .context-view .actions-container li:nth-child(2),
+.graphExplorerContainer .monaco-editor .context-view .actions-container li:nth-last-child(1),
+.graphExplorerContainer .monaco-editor .context-view .actions-container li:nth-last-child(2) {
+  display: none;
+}
+
+/* fix scrollbar under overview ruler not clickable */
+.graphExplorerContainer .monaco-editor .decorationsOverviewRuler {
+  pointer-events: none;
+}
+
+/* use pointer for scrollbar slider */
+.graphExplorerContainer .monaco-editor .scrollbar .slider {
+  cursor: pointer;
+}
+
+/* editor scrollbar background */    
+.graphExplorerContainer .monaco-editor .scrollbar {
+  background: #E6E6E6;
+}
+
+/* always show folding arrows */    
+.graphExplorerContainer .monaco-editor .margin-view-overlays .folding {
+  opacity: 1;
+}
+
+/* line number color and background */
+.graphExplorerContainer .monaco-editor .margin-view-overlays {
+  color: #237893;
+  background-color: #FAFAFA;
+}
+.graphExplorerContainer .monaco-editor .margin-view-overlays .line-numbers,
+.graphExplorerContainer .monaco-editor .margin-view-overlays .current-line ~ .line-numbers {
+  color: #237893;
+  background-color: #F6F6F6;
+}
+/* hide line number when only a single line */
+.graphExplorerContainer .monaco-editor .margin-view-overlays > div:only-child .line-numbers,
+.graphExplorerContainer .monaco-editor .margin-view-overlays > div:only-child .current-line ~ .line-numbers {
+  color: transparent;
+  background-color: transparent;
+}
+
+/* hide decorationsOverviewRuler */
+.graphExplorerContainer .monaco-editor .decorationsOverviewRuler {
+  display: none;
+}

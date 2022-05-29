@@ -1,14 +1,12 @@
 # Cosmos Graph Portal Enhancements
 Chrome extension to enhance the Cosmos graph query editor in the portal.
 
+- Replace query input field with an editor (enables multiline/line breaks, syntax highlighting, indention, line numbers)
 - Ability to format the query
-- Auto resizess the height of the query window
-- Enable line breaks  
-  (enter or shift + enter will insert a line break, ctrl + enter executes the query)
-- Enable tab (insert two spaces)
-- Enable right click in the editor text field
-- Disable spellchecking (no red squiggles)
-- Hide query completion suggestions
+- Auto resizes the height of the query window
+- Enable line breaks
+  (enter will insert a line break, shift + enter or ctrl + enter executes the query)
+- Changes editor appearance in json result
 
 ![Screenshot](Screenshot.png)
 
