@@ -1,39 +1,4 @@
 class Editor {
-  static get GremlinSyntax() {
-    return {
-      tokenizer: {
-        root: [
-          [/\/\/.*$/, "comment"],
-          [/\/\*/,    "comment", "@block_comment"],
-  
-          [/"/,       "string", "@string_double"],
-          [/'/,       "string", "@string_single"],
-        ],
-  
-        block_comment: [
-          [/[^\/*]/,  "comment"],
-          [/\/\*/,    "comment", "@push"],
-          [/\\*\//,   "comment", "@pop"],
-          [/[\/*]/,   "comment"]
-        ],
-  
-        string_double: [
-          [/[^\\"]/,  "string"],
-          [/\\"/,     "string.escape"],
-          [/[\\]/,    "string"],
-          [/"/,       "string", "@pop"]
-        ],
-  
-        string_single: [
-          [/[^\\']/,  "string"],
-          [/\\'/,     "string.escape"],
-          [/[\\]/,    "string"],
-          [/'/,       "string", "@pop"]
-        ]
-      },
-    };
-  }
-
   static get GremlinLanguage() { return "gremlin"; }
   static get QueryLineHeight() { return 19; }
   static get QueryMinLineCount() { return 4; }
@@ -68,30 +33,29 @@ class Editor {
     };
   }
 
-  gremlinRegistred = false;
+  gremlinLanguageDefinition = null;
   gremlinFormatter = null;
   activeQueryEditor = null;
 
+  async load(monarchUrl, gremlintUrl) {
+    const { default: gremlinLanguageDefinition } = await import(monarchUrl);
+    this.gremlinLanguageDefinition = gremlinLanguageDefinition;
+    this.gremlinFormatter = await import(gremlintUrl);
+  }
+
   registerGremlin() {
-    if (this.gremlinRegistred) {
+    if (!window.monaco) {
+      console.warn("Monaco is not laoded");
       return;
     }
-    this.gremlinRegistred = true;
+    
     monaco.languages.register({ id: Editor.GremlinLanguage });
-    monaco.languages.setMonarchTokensProvider(Editor.GremlinLanguage, Editor.GremlinSyntax);
+    monaco.languages.setMonarchTokensProvider(Editor.GremlinLanguage, this.gremlinLanguageDefinition);
   }
 
-  async loadFormatter(url) {
-    this.gremlinFormatter = await import(url);
-  }
-
-  model(uri) {
-    return monaco.editor.getModel(uri);
-  }
-
-  query(container, textarea) {
-    this.registerGremlin();
-
+  query(textarea) {
+    const container = textarea.parentNode;
+    
     const computedStyle = window.getComputedStyle(textarea);
 
     const options = Editor.options();
@@ -111,12 +75,14 @@ class Editor {
 
     this.activeQueryEditor = editor;
 
-    const executeQuery = () => document.querySelector(".graphExplorerContainer .queryContainer .queryButton")?.click();
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
-    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, executeQuery);
+    textarea.style.display = "none";
 
     const element = editor.getDomNode();
     element.style.position = "absolute"; // make containers size not be dependent on the editors size (enables us to resize the editor based on the containers size)
+
+    const executeQuery = () => document.querySelector(".graphExplorerContainer .queryContainer .queryButton")?.click();
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
+    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, executeQuery);
 
     let queryMaxHeight;
     const calculateQueryMaxHeight = () => {
@@ -189,9 +155,11 @@ class Editor {
     resizeObserver.observe(container);
   }
 
-  result(container, model) {
+  result(existingEditor, modelUri) {
+    const container = existingEditor.parentNode;
+    
     const options = Editor.options();
-    options.model = model;
+    options.model = monaco.editor.getModel(modelUri);
     options.readOnly = true;
 
     const editor = monaco.editor.create(container, options);
@@ -201,6 +169,8 @@ class Editor {
       return;
     }
 
+    existingEditor.style.display = "none";
+      
     const graphExplorerContainer = document.querySelector(".graphExplorerContainer");
 
     const resizeEditor = () => {
@@ -273,26 +243,21 @@ class Editor {
   const editor = new Editor();
 
   document.addEventListener("cosmos_extension", (event) => {
-    if (!window.monaco) {
-      console.warn("Monaco is not laoded");
-      return;
-    }
-
-    if (event.detail.type === "query") {
-      const target = document.querySelector("#input");
-      target.style.display = "none";
-      editor.query(target.parentNode, target);
+    if (event.detail.type === "monaco") {
+      editor.registerGremlin();
+      
+    } else if (event.detail.type === "query") {
+      const target = document.querySelector(event.detail.identifier);
+      editor.query(target);
 
     } else if (event.detail.type === "result") {
-      const target = document.querySelector("." + event.detail.identifier);
-      target.style.display = "none";
-      const model = editor.model(event.detail.model);
-      editor.result(target.parentNode, model);
+      const target = document.querySelector(event.detail.identifier);
+      editor.result(target, event.detail.model);
       
     } else if (event.detail.type === "format") {
       editor.format();
     }
   });
-
-  await editor.loadFormatter(document.currentScript.dataset.gremlint);
+  
+  await editor.load(document.currentScript.dataset.monarch, document.currentScript.dataset.gremlint);
 })();

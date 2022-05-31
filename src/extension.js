@@ -2,6 +2,7 @@
 
 class DomListener {
   buttons;
+  monacoLoadedCallback;
   queryInputLoadedCallback;
   resultJsonAddedCallback;
   resourceTreeItemAddedCallback;
@@ -9,8 +10,9 @@ class DomListener {
   useTakeRecords = null;
   monacoLoaded = false;
 
-  constructor(buttons, queryInputLoadedCallback, resultJsonAddedCallback, resourceTreeItemAddedCallback) {
+  constructor(buttons, monacoLoadedCallback, queryInputLoadedCallback, resultJsonAddedCallback, resourceTreeItemAddedCallback) {
     this.buttons = buttons;
+    this.monacoLoadedCallback = monacoLoadedCallback;
     this.queryInputLoadedCallback = queryInputLoadedCallback;
     this.resultJsonAddedCallback = resultJsonAddedCallback;
     this.resourceTreeItemAddedCallback = resourceTreeItemAddedCallback;
@@ -175,6 +177,9 @@ class DomListener {
         const jsonEditorAdded = (element) => {
           const monacoEditorAdded = (element) => {
             tabCloseButton.click();
+            if (this.monacoLoadedCallback) {
+              this.monacoLoadedCallback();
+            }
             if (this.queryInputLoadedCallback) {
               const queryInput = document.querySelector("#input");
               this.queryInputLoadedCallback(queryInput);
@@ -213,7 +218,7 @@ class DomListener {
         if (buttonProperties.click) {
           button.onclick = buttonProperties.click;
         }
-        if (buttonProperties.first == true) {
+        if (buttonProperties.first) {
           buttonContainer.prepend(button);
         } else {
           buttonContainer.append(button);
@@ -235,6 +240,7 @@ class DomListener {
 (async () => {
   // add editor script
   const script = document.createElement("script");
+  script.dataset.monarch = chrome.runtime.getURL("cosmos_gremlin.monarch.js");
   script.dataset.gremlint = chrome.runtime.getURL("gremlint@v3.6.0.js");
   script.src = chrome.runtime.getURL("extension_editor.js");
   document.head.appendChild(script);
@@ -254,9 +260,16 @@ class DomListener {
     click: () => sendMessageToEditor({ type: "format" })
   }];
 
+  const monacoLoaded = () => {
+    sendMessageToEditor({
+      type: "monaco"
+    });
+  };
+
   const queryInputLoaded = (element) => {
     sendMessageToEditor({
-      type: "query"
+      type: "query",
+      identifier: `#${element.id}`
     });
   };
 
@@ -265,7 +278,7 @@ class DomListener {
     element.classList.add(identifier);
     sendMessageToEditor({
       type: "result",
-      identifier: identifier,
+      identifier: `.${identifier}`,
       model: element.dataset.uri
     });
   };
@@ -281,7 +294,7 @@ class DomListener {
     }
   };
 
-  new DomListener(buttons, queryInputLoaded, resultJsonAdded, resourceTreeItemAdded);
+  new DomListener(buttons, monacoLoaded, queryInputLoaded, resultJsonAdded, resourceTreeItemAdded);
 
   // add styles
   const css = document.createElement("link");

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cosmos Graph Portal Enhancements",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Enhance the Cosmos graph query editor in the portal.",
   "icons": {
     "16": "icons/icon16.png",
@@ -19,15 +19,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": [ "extension_editor.js" ],
-      "matches": [ "https://cosmos.azure.com/*" ]
-    },
-    {
-      "resources": [ "extension.css" ],
-      "matches": [ "https://cosmos.azure.com/*" ]
-    },
-    {
-      "resources": [ "gremlint@v3.6.0.js" ],
+      "resources": [ "extension_editor.js", "extension.css", "cosmos_gremlin.monarch.js", "gremlint@v3.6.0.js" ],
       "matches": [ "https://cosmos.azure.com/*" ]
     }
   ],
