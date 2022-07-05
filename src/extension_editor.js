@@ -35,7 +35,7 @@ class Editor {
 
   gremlinLanguageDefinition = null;
   gremlinFormatter = null;
-  activeQueryEditor = null;
+  editorMap = {};
 
   async load(monarchUrl, gremlintUrl) {
     const { default: gremlinLanguageDefinition } = await import(monarchUrl);
@@ -73,27 +73,28 @@ class Editor {
       return;
     }
 
-    this.activeQueryEditor = editor;
+    const modelUri = editor.getModel().uri.toString();
+    this.editorMap[modelUri] = editor;
 
     textarea.style.display = "none";
 
     const element = editor.getDomNode();
     element.style.position = "absolute"; // make containers size not be dependent on the editors size (enables us to resize the editor based on the containers size)
 
-    const executeQuery = () => document.querySelector(".graphExplorerContainer .queryContainer .queryButton")?.click();
+    const queryContainer = textarea.closest(".queryContainer");
+    const graphExplorerContainer = queryContainer.closest(".graphExplorerContainer");
+
+    const executeQuery = () => queryContainer.querySelector(".queryButton")?.click();
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, executeQuery);
     editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, executeQuery);
 
     let queryMaxHeight;
     const calculateQueryMaxHeight = () => {
-      const graphExplorerContainer = document.querySelector(".graphExplorerContainer");
-      if (graphExplorerContainer) {
-        const queryContainerStyles = getComputedStyle(document.querySelector(".graphExplorerContainer .queryContainer"));
-        const paddingTop = parseInt(queryContainerStyles.getPropertyValue("padding-top"), 10);
-        const paddingBottom = parseInt(queryContainerStyles.getPropertyValue("padding-bottom"), 10);
-        const availableHeight = (graphExplorerContainer.clientHeight - paddingTop - paddingBottom - paddingTop) / 2; // second paddingTop is to have same padding below result editor as above query editor
-        queryMaxHeight = Math.floor(availableHeight);
-      }
+      const queryContainerStyles = getComputedStyle(queryContainer);
+      const paddingTop = parseInt(queryContainerStyles.getPropertyValue("padding-top"), 10);
+      const paddingBottom = parseInt(queryContainerStyles.getPropertyValue("padding-bottom"), 10);
+      const availableHeight = (graphExplorerContainer.clientHeight - paddingTop - paddingBottom - paddingTop) / 2; // second paddingTop is to have same padding below result editor as above query editor
+      queryMaxHeight = Math.floor(availableHeight);
     };
     calculateQueryMaxHeight();
 
@@ -171,7 +172,7 @@ class Editor {
 
     existingEditor.style.display = "none";
       
-    const graphExplorerContainer = document.querySelector(".graphExplorerContainer");
+    const graphExplorerContainer = container.closest(".graphExplorerContainer");
 
     const resizeEditor = () => {
       if (container.clientWidth !== 0) { // only resize when we have a width (can be empty i.e. when switching result tab)
@@ -210,8 +211,9 @@ class Editor {
     */
   }
 
-  format() {
-    const query = this.activeQueryEditor.getValue();
+  format(modelUri) {
+    const editor = this.editorMap[modelUri];
+    const query = editor.getValue();
 
     // first format with maxLineLength equal to the queries length, will remove all unnecessary whitespaces (except whitespaces before the query starts and after the query ends)
     const singleLine = this.gremlinFormatter.formatQuery(query, {
@@ -233,9 +235,9 @@ class Editor {
     });
 
     // update editor but keep undo state, https://github.com/react-monaco-editor/react-monaco-editor/pull/212
-    this.activeQueryEditor.pushUndoStop();
-    this.activeQueryEditor.executeEdits("", [ { range: this.activeQueryEditor.getModel().getFullModelRange(), text: formattedQuery }], [new monaco.Range(1, 1, 1, 1)] );
-    this.activeQueryEditor.pushUndoStop();
+    editor.pushUndoStop();
+    editor.executeEdits("", [ { range: editor.getModel().getFullModelRange(), text: formattedQuery }], [new monaco.Range(1, 1, 1, 1)] );
+    editor.pushUndoStop();
   }
 }
 
@@ -255,7 +257,7 @@ class Editor {
       editor.result(target, event.detail.model);
       
     } else if (event.detail.type === "format") {
-      editor.format();
+      editor.format(event.detail.modelUri);
     }
   });
   

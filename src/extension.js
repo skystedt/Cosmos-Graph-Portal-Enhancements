@@ -111,10 +111,10 @@ class DomListener {
         console.warn("Menu bar element not found");
         return;
       }
-      this.mutationObserver(menuBarContainer, false, this.newSqlQueryButtonAdded, (node) => node.querySelector("button[name='New SQL Query']"));
+      this.mutationObserver(menuBarContainer, false, (node) => this.newSqlQueryButtonAdded(node, element), (node) => node.querySelector("button[name='New SQL Query']"));
     } else {
       if (this.queryInputLoadedCallback) {
-        const queryInput = document.querySelector("#input");
+        const queryInput = element.querySelector("#input");
         this.queryInputLoadedCallback(queryInput);
       }
     }
@@ -139,7 +139,7 @@ class DomListener {
     this.mutationObserver(element, true, jsonEditorAdded, (node) => node.classList.contains("jsonEditor") ? node : null);
   }
 
-  newSqlQueryButtonAdded(element) {
+  newSqlQueryButtonAdded(element, graphTabElement) {
     // force monaco to load by opening a tab for New SQL Uery and closing it
 
     const navTabsContainer = document.querySelector(".resourceTreeAndTabs .nav-tabs");
@@ -181,7 +181,7 @@ class DomListener {
               this.monacoLoadedCallback();
             }
             if (this.queryInputLoadedCallback) {
-              const queryInput = document.querySelector("#input");
+              const queryInput = graphTabElement.querySelector("#input");
               this.queryInputLoadedCallback(queryInput);
             }
             this.monacoLoaded = true;
@@ -257,7 +257,13 @@ class DomListener {
     text: "Format Query",
     style: "background: #66aaaa",
     first: true,
-    click: () => sendMessageToEditor({ type: "format" })
+    click: (event) => {
+      const editor = event.target.closest(".queryContainer").querySelector(".monaco-editor");
+      sendMessageToEditor({
+        type: "format",
+        modelUri: editor.dataset.uri
+      });
+    }
   }];
 
   const monacoLoaded = () => {
@@ -267,9 +273,11 @@ class DomListener {
   };
 
   const queryInputLoaded = (element) => {
+    const identifier = `query-${crypto.randomUUID()}`;
+    element.classList.add(identifier);
     sendMessageToEditor({
       type: "query",
-      identifier: `#${element.id}`
+      identifier: `.${identifier}`
     });
   };
 
