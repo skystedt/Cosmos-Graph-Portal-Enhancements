@@ -7,7 +7,7 @@ class DomListener {
   resultJsonAddedCallback;
   resourceTreeItemAddedCallback;
 
-  useTakeRecords = null;
+  useTakeRecords = null; // null means we havnt decided yet if takeRecords should be used or not
   monacoLoaded = false;
 
   constructor(buttons, monacoLoadedCallback, queryInputLoadedCallback, resultJsonAddedCallback, resourceTreeItemAddedCallback) {
@@ -17,10 +17,10 @@ class DomListener {
     this.resultJsonAddedCallback = resultJsonAddedCallback;
     this.resourceTreeItemAddedCallback = resourceTreeItemAddedCallback;
 
-    this.mutationObserver(document.body, false, this.flexContainerAddedToBody, (node) => node.querySelector(":scope > .flexContainer"));
+    this.mutationObserver(document.body.querySelector("#Main"), false, this.flexContainerAddedToBody, (node) => node.querySelector(":scope > .flexContainer"));
   }
 
-  mutationObserver(element, continuous, callback, condition, options) {
+  mutationObserver(element, continuous, callback, condition) {
     if (continuous && this.useTakeRecords === null) {
       console.warn("The first call should not be continuous, it will determine if takeRecords should be used");
     }
@@ -42,7 +42,7 @@ class DomListener {
       if (!hits.length) {
         return false;
       }
-      callback.bind(this)(options?.collection ? hits : hits[0]);
+      callback.bind(this)(hits[0]);
       return true;
     };
 
@@ -56,9 +56,11 @@ class DomListener {
       handleMutations(flattenMutations(mutations), observer);
     });
 
-    mutationObserver.observe(element, { childList: true, subtree: !!options?.subtree });
+    mutationObserver.observe(element, { childList: true });
 
-    // unknown why but sometimes the mutationobserver never calls back when mutations are observed so we try to detect it and instead poll takeRecords
+    // unknown why but sometimes the mutationobserver never calls back when mutations are observed so we try to detect it
+    // when mutationobserver never calls back we will instead poll takeRecords to get changes
+    // 'useTakeRecords' is used to hold if we need to poll takeRecords
 
     if (this.useTakeRecords === null) {
       const takeRecordsPolling = () => {
